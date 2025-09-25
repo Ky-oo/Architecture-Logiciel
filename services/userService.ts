@@ -1,12 +1,13 @@
-const { User } = require("../models");
-import {
+import { User } from "../models/index.ts";
+import type {
   IUser,
   IUserCreate,
   IUserUpdate,
-} from "../models/interfaces/User.interfaces";
+} from "../models/interfaces/User.interfaces.ts";
 
-const getUsers = async (): Promise<IUser> => {
-  return await User.findAll();
+const getUsers = async (): Promise<IUser[]> => {
+  const users = await User.findAll();
+  return users.map((user) => user.get() as IUser);
 };
 
 const createUser = async (body: IUserCreate): Promise<IUser> => {
@@ -19,29 +20,31 @@ const createUser = async (body: IUserCreate): Promise<IUser> => {
     phoneNumber,
     role: email.split("@")[1] === "company.com" ? "Admin" : "User",
   });
-  return newUser;
+  return newUser.get() as IUser;
 };
 
-const updateUser = async (
-  body: IUserUpdate,
-  userId: string
-): Promise<IUser> => {
+const updateUser = async (body: IUserUpdate, userId: string) => {
   const { firstname, lastname, email, phoneNumber, role } = body;
-  const user = User.findByPk(userId);
+  const user = await User.findByPk(userId);
+  if (!user) throw new Error("User not found");
 
-  user.firstname = firstname || user.firstname;
-  user.lastname = lastname || user.lastname;
-  user.email = email || user.email;
-  user.phoneNumber = phoneNumber || user.phoneNumber;
-  user.role = role || user.role;
+  user.set({
+    firstname: firstname || user.get("firstname"),
+    lastname: lastname || user.get("lastname"),
+    email: email || user.get("email"),
+    phoneNumber: phoneNumber || user.get("phoneNumber"),
+    role: role || user.get("role"),
+  });
 
-  await user.save;
+  await user.save();
+
   return user;
 };
 
 const deleteUser = async (userId: string): Promise<void> => {
-  const user = User.findByPk(userId);
+  const user = await User.findByPk(userId);
+  if (!user) throw new Error("User not found");
   await user.destroy();
 };
 
-module.exports = { getUsers, createUser, updateUser, deleteUser };
+export default { getUsers, createUser, updateUser, deleteUser };

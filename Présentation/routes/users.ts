@@ -1,6 +1,6 @@
-var express = require("express");
-var router = express.Router();
-const userService = require("../services/userService");
+import express from "express";
+const router = express.Router();
+import userService from "../../services/userService.ts";
 
 router.get("/", async function (req: any, res: any, next: any) {
   const users = await userService.getUsers();
@@ -24,4 +24,4 @@ router.delete("/:id", async function (req: any, res: any, next: any) {
   res.status(204).end();
 });
 
-module.exports = router;
+export default router;
