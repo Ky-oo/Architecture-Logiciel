@@ -8,19 +8,19 @@ router.get("/", async function (req: any, res: any, next: any) {
 });
 
 router.post("/", async function (req: any, res: any, next: any) {
-  const newUser = userService.createUser(req.body);
+  const newUser = await userService.createUser(req.body);
   res.status(201).json({ newUser });
 });
 
 router.put("/:id", async function (req: any, res: any, next: any) {
   const { id } = req.params;
-  const user = userService.updateUser(req.body, id);
+  const user = await userService.updateUser(req.body, id);
   res.status(200).json({ user });
 });
 
 router.delete("/:id", async function (req: any, res: any, next: any) {
   const { id } = req.params;
-  userService.deleteUser(id);
+  await userService.deleteUser(id);
   res.status(204).end();
 });
 
