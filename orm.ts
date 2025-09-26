@@ -11,4 +11,5 @@ const sequelizeInstance = new Sequelize({
   database: process.env.DB_NAME,
 });
 
+sequelizeInstance.sync({ force: true });
 export default sequelizeInstance;

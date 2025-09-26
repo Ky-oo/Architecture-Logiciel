@@ -1,7 +1,7 @@
-import { UserRepository } from "./UserRepository";
-import UserModel from "./UserModel.ts";
-import { User } from "../../domain/user/User.ts";
-import type { IUserCreate, IUserUpdate } from "../../domain/user/IUser";
+import { UserRepository } from "../UserRepository.ts";
+import UserModel from "../UserModel.ts";
+import { User } from "../../../domain/user/User.ts";
+import type { IUserCreate, IUserUpdate } from "../../../domain/user/IUser.ts";
 
 jest.mock("./UserModel.ts");
 const mockedUserModel = UserModel as jest.Mocked<typeof UserModel>;
