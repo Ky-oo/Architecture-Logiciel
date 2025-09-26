@@ -1,68 +1,74 @@
-# Architecture Logiciel
-
-Ce projet est une application Node.js structurée selon les bonnes pratiques de l'architecture logicielle. Voici la présentation de sa structure et le rôle de chaque dossier :
+# Architecture Logiciel – Clean Architecture
 
 ## Structure du projet
 
+Ce projet applique la Clean Architecture en 5 couches hexagonales :
+
 ```
-app.js
-orm.js
-package.json
-README.md
-ai/
-    AI_USAGE.md
-    prompts/
-        2025-09-25_readme.md
-bin/
-    www
-models/
-    index.js
-    User.js
-public/
-    images/
-    javascripts/
-    stylesheets/
-        style.css
-routes/
-    index.js
-    users.js
-services/
-    userService.js
+src/
+    domain/        # Entités, interfaces, règles métier
+        user/
+            User.ts
+            IUser.ts
+            IUserRepository.ts
+    application/   # Cas d’usage, services, ports
+        user/
+            UserService.ts
+            IUserService.ts
+    persistence/   # Implémentations des repositories, accès DB
+        user/
+            UserRepository.ts
+    presentation/  # Contrôleurs, routes Express
+        user/
+            userController.ts
+    external/      # Intégrations externes (API, services tiers)
 ```
 
-## Dossiers principaux
+## Principes et choix de conception
 
-### `ai/`
+- **Domain** : contient toute la logique métier, les entités et les interfaces. Exemple : la règle d’assignation du rôle utilisateur (Admin/User selon l’email) est dans `User.ts`.
+- **Application** : expose les cas d’usage (services) et les ports d’accès (interfaces). Les services reçoivent leurs dépendances (repositories) par injection.
+- **Persistence** : implémente les interfaces de repository du domaine, ici en mémoire ou via ORM.
+- **Presentation** : routes et contrôleurs Express, découplés de la logique métier et des implémentations.
+- **External** : prévu pour les intégrations tierces (API, services externes).
 
-Contient des ressources liées à l'intelligence artificielle, comme des documents d'utilisation (`AI_USAGE.md`) et des prompts pour l'IA.
+## Dépendances et injection
 
-### `bin/`
+- Les dépendances sont injectées manuellement : le contrôleur instancie le service avec le repository.
+- Les interfaces TypeScript sont utilisées uniquement pour le typage, jamais importées au runtime.
 
-Contient les scripts de démarrage de l'application, notamment le fichier `www` qui lance le serveur.
+## Démarrage et test
 
-### `models/`
+1. Installer les dépendances :
+   ```sh
+   npm install
+   ```
+2. Démarrer le serveur :
+   ```sh
+   npm start
+   ```
+3. Tester l’API utilisateur :
+   ```sh
+   curl http://localhost:3000/users
+   ```
 
-Définit les modèles de données utilisés dans l'application, par exemple le modèle `User`.
+## Règle métier
 
-### `public/`
+La logique d’assignation du rôle utilisateur est strictement dans le domaine :
 
-Regroupe les fichiers statiques accessibles par les utilisateurs : images, scripts JavaScript, feuilles de style CSS.
+```typescript
+// src/domain/user/User.ts
+static assignRole(email: string): string {
+    return email.split("@")[1] === "company.com" ? "Admin" : "User";
+}
+```
 
-### `routes/`
+## Avantages
 
-Définit les routes de l'application, c'est-à-dire les points d'entrée pour les différentes fonctionnalités (ex : `index.js`, `users.js`).
-
-### `services/`
-
-Contient la logique métier et les services, comme la gestion des utilisateurs (`userService.js`).
-
-## Fichiers principaux
-
-- `app.js` : Point d'entrée principal de l'application.
-- `orm.js` : Configuration de l'ORM pour la gestion des données.
-- `package.json` : Dépendances et scripts du projet.
-- `README.md` : Documentation principale du projet.
+- Séparation stricte des responsabilités
+- Facilité de test et d’évolution
+- Respect des principes SOLID et hexagonaux
 
 ---
 
-Ce README offre une vue d'ensemble claire de la structure du projet et du rôle de chaque dossier pour faciliter la prise en main et la contribution.
+Pour toute contribution, suivre la structure et les conventions ci-dessus.

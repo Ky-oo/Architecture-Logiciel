@@ -5,7 +5,7 @@ import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 import cookieParser from "cookie-parser";
 import logger from "morgan";
-import usersRouter from "./Présentation/routes/users.ts";
+import usersRouter from "./src/presentation/user/userController.ts";
 const app = express();
 
 // view engine setup
