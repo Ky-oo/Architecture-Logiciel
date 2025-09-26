@@ -1,8 +1,8 @@
-# Architecture Logiciel – Clean Architecture
+# Architecture Logiciel – Clean Architecture & CQRS
 
 ## Structure du projet
 
-Ce projet applique la Clean Architecture en 5 couches hexagonales :
+Ce projet applique la Clean Architecture en 5 couches hexagonales, avec CQRS et Mediator :
 
 ```
 src/
@@ -18,24 +18,47 @@ src/
     persistence/   # Implémentations des repositories, accès DB
         user/
             UserRepository.ts
+            UserModel.ts
     presentation/  # Contrôleurs, routes Express
         user/
             userController.ts
+    mediator/      # Bus central, commandes, handlers, pipeline
+        Mediator.ts
+        CreateUserCommand.ts
+        CreateUserHandler.ts
     external/      # Intégrations externes (API, services tiers)
 ```
 
 ## Principes et choix de conception
 
-- **Domain** : contient toute la logique métier, les entités et les interfaces. Exemple : la règle d’assignation du rôle utilisateur (Admin/User selon l’email) est dans `User.ts`.
-- **Application** : expose les cas d’usage (services) et les ports d’accès (interfaces). Les services reçoivent leurs dépendances (repositories) par injection.
-- **Persistence** : implémente les interfaces de repository du domaine, ici en mémoire ou via ORM.
+- **Domain** : logique métier, entités, interfaces. Exemple : la règle d’assignation du rôle utilisateur (Admin/User selon l’email) est dans `User.ts`.
+- **Application** : cas d’usage (services), ports d’accès. Les services reçoivent leurs dépendances (repositories) par injection.
+- **Persistence** : implémentation des repositories, accès DB via Sequelize/MySQL (container Docker).
 - **Presentation** : routes et contrôleurs Express, découplés de la logique métier et des implémentations.
+- **Mediator** : bus central pour acheminer commandes/requêtes vers les handlers, avec pipeline de middlewares (validation, pré-traitement, etc).
 - **External** : prévu pour les intégrations tierces (API, services externes).
+
+## Mediator & Pipeline
+
+- Le Mediator permet d’acheminer les commandes/requêtes vers leurs handlers.
+- Un pipeline de middlewares peut être ajouté pour valider ou pré-traiter les données avant le handler.
+- Exemple de middleware pour vérifier l’unicité de l’email :
+  ```typescript
+  mediator.use(async (request) => {
+    if (request.constructor.name === "CreateUserCommand") {
+      const existing = await UserModel.findOne({
+        where: { email: request.body.email },
+      });
+      if (existing) throw new Error("Cet email existe déjà.");
+    }
+  });
+  ```
 
 ## Dépendances et injection
 
 - Les dépendances sont injectées manuellement : le contrôleur instancie le service avec le repository.
 - Les interfaces TypeScript sont utilisées uniquement pour le typage, jamais importées au runtime.
+- Les imports ESM doivent inclure l’extension `.ts` pour la compatibilité avec ts-node.
 
 ## Démarrage et test
 
@@ -43,11 +66,15 @@ src/
    ```sh
    npm install
    ```
-2. Démarrer le serveur :
+2. Démarrer la base MySQL dans Docker :
+   ```sh
+   docker-compose up -d
+   ```
+3. Démarrer le serveur :
    ```sh
    npm start
    ```
-3. Tester l’API utilisateur :
+4. Tester l’API utilisateur :
    ```sh
    curl http://localhost:3000/users
    ```
@@ -67,7 +94,9 @@ static assignRole(email: string): string {
 
 - Séparation stricte des responsabilités
 - Facilité de test et d’évolution
-- Respect des principes SOLID et hexagonaux
+- Respect des principes SOLID, hexagonaux et CQRS
+- Validation et pré-traitement centralisés via le pipeline du Mediator
+- Base de données isolée dans un container Docker
 
 ---
 
