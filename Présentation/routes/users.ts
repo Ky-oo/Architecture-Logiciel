@@ -1,6 +1,6 @@
 import express from "express";
 const router = express.Router();
-import userService from "../../services/userService.ts";
+import userService from "../../services/userService";
 
 router.get("/", async function (req: any, res: any, next: any) {
   const users = await userService.getUsers();
