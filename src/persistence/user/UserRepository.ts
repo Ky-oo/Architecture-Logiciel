@@ -1,33 +1,34 @@
 import type { IUser, IUserCreate, IUserUpdate } from "../../domain/user/IUser";
 import type { IUserRepository } from "../../domain/user/IUserRepository";
 import { User } from "../../domain/user/User.ts";
+import UserModel from "./UserModel.ts";
 
 export class UserRepository implements IUserRepository {
-  // Remplacer par ORM réel si besoin
-  private users: IUser[] = [];
-
   async getUsers(): Promise<IUser[]> {
-    return this.users;
+    const users = await UserModel.findAll();
+    return users.map((u: any) => u.toJSON());
   }
 
   async getUserByPk(userId: string): Promise<IUser | null> {
-    return this.users.find((u) => u.id === Number(userId)) || null;
+    const user = await UserModel.findByPk(userId);
+    return user ? user.toJSON() : null;
   }
 
   async createUser(body: IUserCreate): Promise<IUser> {
-    const user = new User({ ...body, id: this.users.length + 1 });
-    this.users.push(user);
-    return user;
+    // Assign role using domain logic
+    const role = User.assignRole(body.email);
+    const user = await UserModel.create({ ...body, role });
+    return user.toJSON();
   }
 
   async updateUser(body: IUserUpdate, userId: string): Promise<IUser> {
-    const user = await this.getUserByPk(userId);
+    const user = await UserModel.findByPk(userId);
     if (!user) throw new Error("User not found");
-    Object.assign(user, body);
-    return user;
+    await user.update(body);
+    return user.toJSON();
   }
 
   async deleteUser(userId: string): Promise<void> {
-    this.users = this.users.filter((u) => u.id !== Number(userId));
+    await UserModel.destroy({ where: { id: userId } });
   }
 }

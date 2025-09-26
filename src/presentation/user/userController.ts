@@ -18,8 +18,16 @@ router.post("/", async (req, res) => {
 
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
-  const user = await userService.updateUser(req.body, id);
-  res.status(200).json({ user });
+  try {
+    const user = await userService.updateUser(req.body, id);
+    res.status(200).json({ user });
+  } catch (err) {
+    if (err instanceof Error && err.message === "User not found") {
+      res.status(404).json({ error: "User not found" });
+    } else {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
 });
 
 router.delete("/:id", async (req, res) => {
